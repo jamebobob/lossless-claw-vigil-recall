@@ -46,6 +46,7 @@ import {
 } from "./store/conversation-store.js";
 import { SummaryStore } from "./store/summary-store.js";
 import { createLcmSummarizeFromLegacyParams } from "./summarize.js";
+import { extractAndPersist } from "./extraction.js";
 import type { LcmDependencies } from "./types.js";
 
 type AgentMessage = Parameters<ContextEngine["ingest"]>[0]["message"];
@@ -2134,22 +2135,42 @@ export class LcmContextEngine implements ContextEngine {
 
     const liveContextTokens = estimateSessionTokenCountForAfterTurn(params.messages);
 
+    let leafShouldCompact = false;
     try {
       const leafTrigger = await this.evaluateLeafTrigger(params.sessionId, params.sessionKey);
-      if (leafTrigger.shouldCompact) {
-        this.compactLeafAsync({
-          sessionId: params.sessionId,
-          sessionKey: params.sessionKey,
-          sessionFile: params.sessionFile,
-          tokenBudget,
-          currentTokenCount: liveContextTokens,
-          legacyParams,
-        }).catch(() => {
-          // Leaf compaction is best-effort and should not fail the caller.
-        });
-      }
+      leafShouldCompact = leafTrigger.shouldCompact;
     } catch {
       // Leaf trigger checks are best-effort.
+    }
+
+    // Pre-compaction extraction: extract decisions before compaction destroys raw text.
+    if (leafShouldCompact && this.config.preCompactionExtraction.enabled && this.config.preCompactionExtraction.outputPath) {
+      try {
+        const extractionConfig = this.config.preCompactionExtraction;
+        await extractAndPersist({
+          messages: ingestBatch,
+          deps: this.deps,
+          extractionModel: extractionConfig.extractionModel || this.config.summaryModel,
+          extractionProvider: extractionConfig.extractionProvider || this.config.summaryProvider,
+          outputPath: extractionConfig.outputPath,
+          timezone: this.config.timezone,
+        });
+      } catch {
+        // Extraction is best-effort; never block compaction.
+      }
+    }
+
+    if (leafShouldCompact) {
+      this.compactLeafAsync({
+        sessionId: params.sessionId,
+        sessionKey: params.sessionKey,
+        sessionFile: params.sessionFile,
+        tokenBudget,
+        currentTokenCount: liveContextTokens,
+        legacyParams,
+      }).catch(() => {
+        // Leaf compaction is best-effort and should not fail the caller.
+      });
     }
 
     try {

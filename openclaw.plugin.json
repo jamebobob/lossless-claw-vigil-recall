@@ -48,6 +48,26 @@
     "customInstructions": {
       "label": "Custom Instructions",
       "help": "Natural language instructions injected into all summarization prompts (e.g., formatting rules, content filtering)"
+    },
+    "preCompactionExtraction": {
+      "label": "Pre-Compaction Extraction",
+      "help": "Extract key decisions from messages before compaction and write to daily notes"
+    },
+    "preCompactionExtraction.enabled": {
+      "label": "Enable Extraction",
+      "help": "When true, extract decisions before compaction runs"
+    },
+    "preCompactionExtraction.extractionModel": {
+      "label": "Extraction Model",
+      "help": "Model for extraction LLM calls (falls back to summaryModel if unset)"
+    },
+    "preCompactionExtraction.extractionProvider": {
+      "label": "Extraction Provider",
+      "help": "Provider for extraction LLM calls (falls back to summaryProvider if unset)"
+    },
+    "preCompactionExtraction.outputPath": {
+      "label": "Extraction Output Path",
+      "help": "Directory for daily note files (YYYY-MM-DD.md). If empty, extraction is skipped."
     }
   },
   "configSchema": {
@@ -118,6 +138,24 @@
       },
       "customInstructions": {
         "type": "string"
+      },
+      "preCompactionExtraction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "extractionModel": {
+            "type": "string"
+          },
+          "extractionProvider": {
+            "type": "string"
+          },
+          "outputPath": {
+            "type": "string"
+          }
+        }
       }
     }
   }

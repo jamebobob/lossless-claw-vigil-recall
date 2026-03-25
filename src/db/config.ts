@@ -44,6 +44,13 @@ export type LcmConfig = {
   pruneHeartbeatOk: boolean;
   /** Custom instructions injected into all summarization prompts. */
   customInstructions: string;
+  /** Pre-compaction extraction settings. */
+  preCompactionExtraction: {
+    enabled: boolean;
+    extractionModel: string;
+    extractionProvider: string;
+    outputPath: string;
+  };
 };
 
 /** Safely coerce an unknown value to a finite number, or return undefined. */
@@ -189,5 +196,20 @@ export function resolveLcmConfig(
         : toBool(pc.pruneHeartbeatOk) ?? false,
     customInstructions:
       env.LCM_CUSTOM_INSTRUCTIONS?.trim() ?? toStr(pc.customInstructions) ?? "",
+    preCompactionExtraction: {
+      enabled:
+        env.LCM_PRE_COMPACTION_EXTRACTION_ENABLED !== undefined
+          ? env.LCM_PRE_COMPACTION_EXTRACTION_ENABLED === "true"
+          : toBool((pc.preCompactionExtraction as Record<string, unknown> | undefined)?.enabled) ?? false,
+      extractionModel:
+        env.LCM_EXTRACTION_MODEL?.trim()
+          ?? toStr((pc.preCompactionExtraction as Record<string, unknown> | undefined)?.extractionModel) ?? "",
+      extractionProvider:
+        env.LCM_EXTRACTION_PROVIDER?.trim()
+          ?? toStr((pc.preCompactionExtraction as Record<string, unknown> | undefined)?.extractionProvider) ?? "",
+      outputPath:
+        env.LCM_EXTRACTION_OUTPUT_PATH?.trim()
+          ?? toStr((pc.preCompactionExtraction as Record<string, unknown> | undefined)?.outputPath) ?? "",
+    },
   };
 }
