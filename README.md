@@ -1,3 +1,5 @@
+> **Archived April 2026.** Built on [OpenClaw](https://github.com/openclaw/openclaw) and moved off of it when the active work migrated to [Hermes](https://github.com/hermes-agent/hermes-agent). The design ideas in this repo might still be useful. The platform wiring is obsolete.
+
 # lossless-claw-vigil-recall
 
 A production fork of [@martian-engineering/lossless-claw](https://github.com/Martian-Engineering/lossless-claw), the DAG-based context management plugin for [OpenClaw](https://github.com/openclaw/openclaw).
